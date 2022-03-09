@@ -1,4 +1,5 @@
 import speech_recognition as sr
+from pydub import AudioSegment
 from datetime import date, datetime
 import json
 import os
@@ -14,34 +15,56 @@ if not os.path.isfile(file_path):
 
 with open(file_path, "r") as file:
     data = json.loads(file.read() or '{"notes": []}')
-    print("DATA", data)
+
+
+def save_audio(audio, data, file_path):
+    text = r.recognize_google(audio)  # recognize speech using Google Speech Recognition
+
+    print("Result:\n{}".format(text))
+    now = datetime.now()
+    timestamp = datetime.timestamp(now)
+    data["notes"].append({str(timestamp): text})
+
+    with open(file_path, "w") as output:
+        output.write(json.dumps(data, indent=4))
 
 
 def main():
+    # Support .mp3, mp4, .m4a, and .wav files
     parser = OptionParser()
     parser.add_option(
         "-f",
         "--file_name",
         default=None,
-        dest="mp3_file",
-        help="path of mp3 file",
+        dest="audio_file",
+        help="name of audio file",
         metavar="FILE",
     )
 
     (options, args) = parser.parse_args()
 
-    if options.mp3_file:
-        print("HEllo World")
+    if options.audio_file:
+        audio_path = "./audio_files/{}".format(options.audio_file)
+        if (
+            audio_path[-4:] == ".mp3"
+            or audio_path[-4:] == ".mp4"
+            or audio_path[-4:] == ".m4a"
+        ):
+            sound = AudioSegment.from_file(audio_path)
+            audio_path = "{}.wav".format(audio_path[:-4])
+            sound.export(audio_path, format="wav")
 
-        # Parse through mp3 file and make a new timestamp every 5 seconds
+        with sr.AudioFile(audio_path) as source:
+            audio = r.record(source)
+            save_audio(audio, data, file_path)
     else:
         go = True
         count = 0
         while go:
             with sr.Microphone() as source:  # use the default microphone as the audio source
                 try:
-                    # only adjust every 25 interations
-                    if count % 25 == 0:
+                    # only adjust every 5 interations
+                    if count % 5 == 0:
                         r.adjust_for_ambient_noise(source)
                     count += 1
 
@@ -50,17 +73,7 @@ def main():
                         source
                     )  # listen for the first phrase and extract it into audio data
 
-                    text = r.recognize_google(
-                        audio
-                    )  # recognize speech using Google Speech Recognition
-
-                    print("Result:\n{}".format(text))
-                    now = datetime.now()
-                    timestamp = datetime.timestamp(now)
-                    data["notes"].append({str(timestamp): text})
-
-                    with open(file_path, "w") as output:
-                        output.write(json.dumps(data, indent=4))
+                    save_audio(audio, data, file_path)
                 except KeyboardInterrupt:
                     go = False
                     print("\nStopping...")

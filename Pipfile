@@ -7,6 +7,7 @@ name = "pypi"
 speechrecognition = "*"
 pyaudio = "*"
 black = "*"
+pydub = "*"
 
 [dev-packages]
 
