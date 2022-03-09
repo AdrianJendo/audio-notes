@@ -70,7 +70,7 @@ def main():
 
                     print("Ready for input")
                     audio = r.listen(
-                        source
+                        source, phrase_time_limit=15
                     )  # listen for the first phrase and extract it into audio data
 
                     save_audio(audio, data, file_path)
