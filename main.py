@@ -18,7 +18,6 @@ with open(file_path, "r") as file:
 
 
 def main():
-
     parser = OptionParser()
     parser.add_option(
         "-f",
@@ -45,6 +44,7 @@ def main():
                     if count % 25 == 0:
                         r.adjust_for_ambient_noise(source)
                     count += 1
+
                     print("Ready for input")
                     audio = r.listen(
                         source
@@ -53,10 +53,10 @@ def main():
                     text = r.recognize_google(
                         audio
                     )  # recognize speech using Google Speech Recognition
+
                     print("Result:\n{}".format(text))
                     now = datetime.now()
                     timestamp = datetime.timestamp(now)
-                    print(data)
                     data["notes"].append({str(timestamp): text})
 
                     with open(file_path, "w") as output:
